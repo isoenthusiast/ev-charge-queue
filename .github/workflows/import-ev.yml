@@ -27,7 +27,7 @@ jobs:
       - name: Import reviewed EV source
         run: |
           test -f ev-source.zip || exit 0
-          echo '4b1923ba1bdc51983ea58bc79a760f47f3400113ed3a6c752af301ff71e0257f  ev-source.zip' | sha256sum --check
+          echo 'cf976e187f694d898954fbc40ecbf1fafcf326a70312c9a5fd8a01ae9f176229  ev-source.zip' | sha256sum --check
           python3 - <<'PY'
           import pathlib, zipfile
           with zipfile.ZipFile('ev-source.zip') as z:
@@ -42,7 +42,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add .
-          git commit -m 'Build mobile EV queue from verified starter'
+          git commit -m 'Record EV verification and preserve current admin form state'
           git push
       - uses: actions/setup-node@v4
         with:
@@ -59,3 +59,4 @@ jobs:
           name: ev-browser-previews
           path: artifacts/ev-queue-*.png
           retention-days: 7
+
