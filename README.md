@@ -1,76 +1,48 @@
-# Ed App Starter
+# Charge Queue
 
-A reusable web application foundation: AdonisJS 7, TypeScript, PostgreSQL, Edge and HTMX. Version 0.1.0.
+Mobile-first EV charger scheduling built from `isoenthusiast/ed-app-starter-public` at commit `b5f8a993e18f9a23119f8931779ed8567d7b5c3c`.
 
-**Status: reusable starter with a known dependency advisory; review SECURITY.md before production use.** Original runtime passed local/CI tests and Railway Docker/HTTPS smoke checks. See `docs/template-verification.md` for the exact tested scope.
+One AdonisJS 7 / TypeScript app, PostgreSQL, Edge templates and the existing session/CSRF/HTMX foundation. No new runtime dependencies. The public starter remains unchanged.
 
-## Beginner walkthrough
+## Start locally
 
-Start with [the deployment guide](docs/BEGINNER_DEPLOYMENT.md), [agent prompt](docs/AGENT_DEPLOYMENT_PROMPT.md) and [visual walkthrough](docs/deployment-guide.svg).
-
-## Start a new app
-
-Use **Use this template** in https://github.com/isoenthusiast/ed-app-starter-public to create a new private project. Read RAILWAY_SETUP.md before deploying. Do not copy another app's `.env`, database, Git remote or Railway bindings.
-
-Requirements: Node **24.19.0**, npm **11.9.0**, and PostgreSQL **18.4** (Docker Compose is one option). Browser tests use Playwright **1.56.1**, pinned because its browser distribution was accessible in the verification environment.
+Requires Node 24.19.0, npm 11.9.0 and PostgreSQL 18.4.
 
 ```bash
 npm ci
-npm run starter:init -- --name my-app
+npm run starter:init -- --name ev-charge-queue
 docker compose up -d
 npm run db:migrate
 npm run user:create
 npm run dev
 ```
 
-Open http://localhost:3333. The account command prompts for your email and password. There is no public signup or default account. Docker creates `starter_dev` and `starter_test` with local-only example credentials from `compose.yaml`; use independently generated credentials on any hosted environment. If Docker is unavailable, create those databases on a local PostgreSQL server and configure `.env` accordingly. Compose init scripts run only on a new volume.
+Open http://localhost:3333. Create each private account with `npm run user:create`; the command prompts securely. There is no default account, public signup, password reset or email delivery. Sign in, create a location, add existing accounts by email and assign member/admin roles. Add chargers, register your car in the garage, and reserve a half-hour slot.
 
-`starter:init` generates `.env` only if missing and preserves existing secrets. It updates the app name in package metadata. `APP_KEY` must stay stable across production redeploys. The initialization command does not install dependencies, create databases or provision hosting.
+## Working rules
 
-## Verify the foundation
+- Location creators become the first location admin. A user can belong to multiple locations and have a different role at each one. At least one admin must remain.
+- Location admins add existing users and chargers, assign bookings for member-owned cars, update charger status, review fault reports and correct sessions with a reason.
+- Members register their own cars, view their locations' queues, reserve their cars, release their own bookings, and start/finish their own sessions.
+- Each reservation occupies exactly 30 minutes, starting on :00 or :30. Book up to 14 days ahead. All initial locations use **Asia/Kuala_Lumpur**; stored timestamps are UTC.
+- PostgreSQL unique indexes prevent simultaneous reservations for the same charger or car and prevent multiple active sessions for a charger/car. A location lock makes status changes and bookings atomic.
+- Start charging during the reserved half hour. Finishing early does not reopen that same slot. Releasing a booking makes its slot available again.
+- Any location member can report a fault. Pending reports do not change availability. Verification sets the charger faulty, cancels upcoming bookings and stops active sessions. Admins mark repaired equipment available again; cancelled bookings are not restored.
+- Admin changes and booking/session actions have an audit trail. Other members see occupied times but not other users' number plates or emails.
+
+This is a **scheduled booking queue**, not a first-come walk-in waitlist. It records sessions; it does not switch physical chargers, measure kWh, enforce charging cutoffs, process payments or connect to OCPP hardware. The queue refreshes on page reload. No push notifications or automatic no-show expiry are included.
+
+## Verification
 
 ```bash
-npx playwright install chromium
+npx playwright install --with-deps chromium
 npm run starter:verify
 ```
 
-On Linux, Playwright may also require OS browser libraries (`npx playwright install --with-deps chromium` on a supported machine). The suite compiles the app, migrates the dedicated test database, creates temporary accounts, runs Chromium against the production build, restarts it and verifies the saved session and record. It runs serially on port 3334; do not run two copies concurrently on that port.
+The gate uses a disposable local `*_test` PostgreSQL database and the production build. It covers template login/CSRF/ownership/HTMX regression, mobile location setup, role restrictions, booking conflicts and concurrent requests, fault verification/repair, manual sessions and process-restart persistence. GitHub Actions provisions PostgreSQL automatically.
 
-`TEST_DATABASE_URL` must target a local database ending in `_test`, with a different name from the development database. The runner never truncates the database; it deletes only its generated users and their notes. It leaves schema, anonymous sessions and rate-limit rows in the dedicated test database. Use a disposable database in CI. Screenshot and browser-session evidence in `artifacts/` is private test output and must not be committed or published.
+Read `docs/ev-verification.md` for observed results and gaps. Generated browser session state and `.env` must never be committed. `docs/ev-requirements.md` records scope. The inherited `docs/template-verification.md` describes the original starter, not this app's test results.
 
-## Commands
+## Deployment
 
-| Command                                                 | Purpose                                                 |
-| ------------------------------------------------------- | ------------------------------------------------------- |
-| `npm run dev`                                           | Development app and Vite                                |
-| `npm run build`                                         | Compile server and web assets into `build/`             |
-| `npm start`                                             | Run compiled server; runtime variables must be supplied |
-| `npm run db:migrate`                                    | Apply development migrations                            |
-| `npm run user:create`                                   | Create an account interactively                         |
-| `npm run typecheck` / `npm run lint`                    | Static checks                                           |
-| `npm test`                                              | Browser/database tests against an existing build        |
-| `npm run starter:verify`                                | Typecheck, lint, build, browser/database/restart checks |
-| `npm run starter:smoke -- --base-url https://your-host` | Read-only HTTP checks on a supplied host                |
-
-The deployed smoke command checks health, login rendering and private-route redirect only. It does not claim authenticated remote verification. The full mutation suite intentionally refuses remote databases.
-
-## What is included
-
-- Private session login, administrator account creation and database-backed login throttling.
-- PostgreSQL-backed sessions, CSRF protection and escaped server templates.
-- A small Notes example demonstrating list/create/complete/delete and ownership enforcement.
-- HTMX partial updates, loading/error states and server-side validation.
-- Health endpoints, database migrations, production Dockerfile, Railway configuration and CI.
-- One backend application, one database, no Redis or separate frontend service.
-
-## What you build next
-
-Replace the Notes example with the first real business workflow, retaining the infrastructure and extending its tests. Authentication is not a complete account-management product: password reset, email verification, SSO, audit trails, roles and tenancy are deliberate future features when required.
-
-Android, mobile token authentication and OpenAPI are not implemented in this web-only release. The accompanying `APP_STARTER_PACK.md` explains the optional Android path. Adding mobile should reuse backend services and include separate contract/client tests.
-
-Read `docs/operations.md` before hosting. `AGENTS.md` tells a coding agent how to work within this template.
-
-## License and security
-
-MIT; see LICENSE and THIRD_PARTY_NOTICES.md. Read SECURITY.md for the known unresolved advisory. Public source includes no hosted credentials or live infrastructure bindings.
+Use `RAILWAY_SETUP.md` for Docker, migration, variable and health settings. Deploy this repository into a separate project/database with fresh secrets. No new hosted service has been provisioned for this app. Production readiness requires the checks and unresolved dependency advisory in `SECURITY.md`, plus your own hosted acceptance and backup/restore rehearsal.

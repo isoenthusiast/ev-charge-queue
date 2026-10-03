@@ -1,0 +1,25 @@
+<!doctype html><html lang="en"><head>
+@include('partials/head')
+</head><body><main class="shell">
+
+@include('partials/charging_nav')
+
+<section class="hero"><p class="eyebrow">LESS WAITING. MORE GOING.</p><h1>Make room<br />for your next charge.</h1><p>Choose a location. Reserve your half hour. Plug in on time.</p><span class="pill">30-minute slots · Malaysia time</span></section>
+<section><div class="section-heading"><h2>Your locations</h2><span>{{ locations.length }} connected</span></div>
+<div class="cards">
+@each(l in locations)
+<a class="card location-card" href="/locations/{{ l.id }}"><span class="eyebrow">{{ l.role === 'admin' ? 'LOCATION ADMIN' : 'MEMBER' }}</span><h3>{{ l.name }}</h3><p>View chargers &amp; queue <span>→</span></p></a>
+@else
+<p class="empty">No locations yet. Ask a location admin to add your account, or create a location below.</p>
+@end
+</div></section>
+<section class="card"><h2>Your garage</h2><p class="muted">Only you and admins at your locations can reserve your cars.</p><div class="garage">
+@each(c in cars)
+<div class="car"><strong>{{ c.plate }}</strong><span>{{ c.label }}</span></div>
+@else
+<p>No cars yet. Add one to book a slot.</p>
+@end
+</div>
+<details><summary>Add a car</summary><form method="post" action="/actions/car">{{ csrfField() }}<label>Number plate<input name="plate" maxlength="20" required placeholder="ABC1234" /></label><label>Car name<input name="label" maxlength="60" required placeholder="My EV" /></label><button>Add car</button></form></details></section>
+<section class="card"><details><summary>Create a location</summary><p>You will become its first location admin. Existing users can then be added by email.</p><form method="post" action="/actions/location">{{ csrfField() }}<label>Location name<input name="name" minlength="2" maxlength="100" required placeholder="Residence charging bay" /></label><button>Create location</button></form></details></section>
+<footer>Signed in as {{ auth.user.email }}<br />A booking reserves time. It does not remotely control a charger.</footer></main></body></html>

@@ -1,0 +1,116 @@
+<!doctype html><html lang="en"><head>
+@include('partials/head')
+</head><body><main class="shell">
+
+@include('partials/charging_nav')
+<a class="back" href="/app">← Your locations</a>
+<section class="location-hero"><p class="eyebrow">{{ member.role === 'admin' ? 'LOCATION ADMIN' : 'YOUR CHARGING LOCATION' }}</p><h1>{{ location.name }}</h1><p>Reserve a spot. Keep the queue moving.</p></section>
+<nav class="tabs"><a href="#chargers">Chargers</a><a href="#queue">Queue</a><a href="#reports">Reports</a>
+@if(member.role === 'admin')
+<a href="#admin">Manage</a>
+@end
+</nav>
+<form class="datebar" method="get"><label>Charging date<input type="date" name="day" value="{{ day }}" required /></label><button class="secondary">Show slots</button><span class="muted">{{ location.timezone }} · 30 minutes</span></form>
+<section id="chargers"><div class="section-heading"><h2>Choose a charger</h2><span>{{ chargers.length }} chargers</span></div><div class="cards">
+
+@each(c in chargers)
+<article class="card charger" data-charger="{{ c.id }}"><div class="section-heading"><span class="charger-icon">↯</span><span class="badge {{ c.status }}">{{ c.status }}</span></div><h3>{{ c.name }}</h3><p class="muted">{{ c.connector }} · {{ c.power_kw }} kW</p>
+
+@if(c.status === 'available')
+
+
+@if(cars.length && slots.length)
+<form method="post" action="/actions/book">{{ csrfField() }}<input type="hidden" name="charger" value="{{ c.id }}" /><input type="hidden" name="day" value="{{ day }}" /><label>Car<select name="car" required>
+@each(car in cars)
+<option value="{{ car.id }}">{{ car.plate }} · {{ car.label }}</option>
+@end
+</select></label><label>Half-hour slot<select name="start" required>
+@each(s in slots)
+<option value="{{ s.iso }}">{{ s.label }}</option>
+@end
+</select></label><p class="muted small">Check the queue below. Availability is confirmed when you book.</p><button>Book slot</button></form>
+@else
+<p class="empty">{{ cars.length ? 'No future slots for this date.' : 'Add a car to your garage to book.' }}</p>
+@end
+
+
+@else
+<p class="empty">Bookings paused until this charger is available again.</p>
+@end
+
+<details><summary>Report a problem</summary><form method="post" action="/actions/report">{{ csrfField() }}<input type="hidden" name="charger" value="{{ c.id }}" /><label>What happened?<textarea name="description" minlength="5" maxlength="1000" required placeholder="Describe the fault so an admin can check it."></textarea></label><button class="secondary">Send report</button></form><p class="muted small">An admin will verify the report. Do not use equipment that appears unsafe.</p></details>
+
+@if(member.role === 'admin')
+<details><summary>Charger status</summary><form method="post" action="/actions/status">{{ csrfField() }}<input type="hidden" name="charger" value="{{ c.id }}" /><label>Status<select name="status"><option value="available">Available / repaired</option><option value="maintenance">Maintenance</option><option value="faulty">Verified faulty</option></select></label><label>Verification or repair note<textarea name="reason" minlength="5" maxlength="1000" required></textarea></label><p class="muted small">Faulty or maintenance cancels upcoming bookings and stops active sessions.</p><button class="secondary">Update status</button></form></details>
+@end
+</article>
+@else
+<p class="empty">No chargers added yet.</p>
+@end
+</div></section>
+<section id="queue"><div class="section-heading"><h2>The charging queue</h2><span>{{ day }}</span></div><p class="muted">Sorted by reserved start time. Finished slots remain reserved for that half hour.</p>
+
+@each(b in bookings)
+<article class="card booking" data-booking="{{ b.id }}"><div class="section-heading"><strong class="slot-time">{{ b.time }}–{{ b.end }}</strong><span class="badge {{ b.state }}">{{ b.state }}</span></div><h3>{{ b.charger_name }}</h3><p>{{ (b.own || member.role === 'admin') ? b.plate : 'Reserved car' }} {{ b.own ? '· Your booking' : '' }}</p>
+
+@if(b.own)
+<div class="actions">
+@if(b.canRelease)
+<form method="post" action="/actions/release">{{ csrfField() }}<input type="hidden" name="booking" value="{{ b.id }}" /><input type="hidden" name="day" value="{{ day }}" /><button class="secondary">Release slot</button></form>
+@end
+
+
+@if(b.canStart)
+<form method="post" action="/actions/start">{{ csrfField() }}<input type="hidden" name="booking" value="{{ b.id }}" /><button>Start charging</button></form>
+@end
+
+
+@if(b.state === 'charging')
+<form method="post" action="/actions/finish">{{ csrfField() }}<input type="hidden" name="booking" value="{{ b.id }}" /><button>Finish charging</button></form>
+@end
+</div>
+@end
+
+
+@if(member.role === 'admin')
+<details><summary>Edit session manually</summary><form method="post" action="/actions/session">{{ csrfField() }}<input type="hidden" name="booking" value="{{ b.id }}" /><input type="hidden" name="day" value="{{ day }}" /><label>Session state<select name="state"><option value="booked">Booked</option><option value="charging">Charging</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select></label><label>Actual start<input name="started" type="datetime-local" value="{{ b.started }}" /></label><label>Actual end<input name="ended" type="datetime-local" value="{{ b.ended }}" /></label><label>Correction reason<textarea name="reason" minlength="5" maxlength="1000" required></textarea></label><p class="muted small">Times are in {{ location.timezone }}. Changes are recorded in the audit log.</p><button class="secondary">Save correction</button></form></details>
+@end
+</article>
+@else
+<p class="empty">A clear queue. Be the first to book a slot.</p>
+@end
+</section>
+<section id="reports"><h2>{{ member.role === 'admin' ? 'Fault reports' : 'Your fault reports' }}</h2>
+@each(r in reports)
+<article class="card" data-report="{{ r.id }}"><div class="section-heading"><strong>{{ r.charger_name }}</strong><span class="badge {{ r.state }}">{{ r.state }}</span></div><p>{{ r.description }}</p>
+@if(r.resolution)
+<p class="muted">Admin note: {{ r.resolution }}</p>
+@end
+
+
+@if(member.role === 'admin' && r.state === 'pending')
+<form method="post" action="/actions/review">{{ csrfField() }}<input type="hidden" name="report" value="{{ r.id }}" /><label>Decision<select name="decision"><option value="verified">Verify fault &amp; pause charger</option><option value="dismissed">Dismiss report</option></select></label><label>Review note<textarea name="reason" minlength="5" maxlength="1000" required></textarea></label><button class="secondary">Save review</button></form>
+@end
+</article>
+@else
+<p class="empty">No reports to show.</p>
+@end
+</section>
+
+@if(member.role === 'admin')
+<section id="admin"><h2>Manage this location</h2><div class="cards"><section class="card"><h3>People &amp; permissions</h3>
+@each(m in members)
+<p class="member-line"><span>{{ m.email }}</span><strong>{{ m.role }}</strong></p>
+@end
+<form method="post" action="/actions/member">{{ csrfField() }}<input type="hidden" name="location" value="{{ location.id }}" /><label>User email<input name="email" type="email" required /></label><label>Location role<select name="role"><option value="member">Member</option><option value="admin">Location admin</option></select></label><button>Add / update member</button></form><p class="muted small">Accounts must already exist. At least one admin must remain.</p></section>
+<section class="card"><h3>Add a charger</h3><form method="post" action="/actions/charger">{{ csrfField() }}<input type="hidden" name="location" value="{{ location.id }}" /><label>Charger name<input name="name" minlength="2" maxlength="80" required placeholder="Bay 01" /></label><label>Connector<input name="connector" maxlength="40" required value="Type 2" /></label><label>Power (kW)<input name="power" type="number" min="0.1" max="1000" step="0.1" required value="7.4" /></label><button>Add charger</button></form></section></div>
+<details class="card"><summary>Recent activity</summary>
+@each(a in audit)
+<p><strong>{{ a.action }}</strong><br />{{ a.detail }}<br /><span class="muted small">Actor #{{ a.actor_id }} · {{ a.created_at }}</span></p>
+@else
+<p>No changes recorded.</p>
+@end
+</details></section>
+@end
+
+<footer>Refresh for the latest queue. Conflicting bookings are rejected when saved.<br /><a href="/app">Your garage &amp; locations</a></footer></main></body></html>

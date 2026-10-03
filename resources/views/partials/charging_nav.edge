@@ -1,0 +1,6 @@
+<header class="topbar"><a class="brand" href="/app"><span class="bolt">↯</span> Charge Queue</a><form method="post" action="/logout">{{ csrfField() }}<button class="quiet">Sign out</button></form></header>
+
+@if(flashMessages.has('success'))
+<p role="status" class="notice">{{ flashMessages.get('success') }}</p>
+@end
+

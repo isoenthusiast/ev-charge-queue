@@ -5,7 +5,8 @@ async function login(page, email = process.env.TEST_EMAIL) {
   await page.getByLabel('Email', { exact: true }).fill(email)
   await page.getByLabel('Password', { exact: true }).fill(process.env.TEST_PASSWORD)
   await page.getByRole('button', { name: 'Sign in', exact: true }).click()
-  await expect(page).toHaveURL(/\/notes$/)
+  await expect(page).toHaveURL(/\/app$/)
+  await page.goto('/notes')
 }
 test('private access, health, no public signup and CSRF rejection', async ({ page, request }) => {
   await page.goto('/notes')

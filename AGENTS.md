@@ -11,3 +11,5 @@ Read README.md, docs/architecture.md and docs/operations.md first. Use APP_START
 - npm test expects an existing build. A development-server pass is not a production-build pass.
 - Check docs/template-verification.md before claiming capabilities. Read RAILWAY_SETUP.md for Railway Docker/HTTPS verification. Hosted authenticated workflows, backup/restore and Android remain unverified. New Railway services do not read legacy railway.json; apply and inspect service settings explicitly.
 - Document dependency or operational changes. Keep deployment identities out of the reusable template.
+
+For this app, also read docs/ev-requirements.md and docs/ev-verification.md. ChargingService owns permissions, booking concurrency and fault/session transitions. Do not replace PostgreSQL constraints with UI-only checks. Preserve the Notes route as a template regression fixture; /app is the actual product.

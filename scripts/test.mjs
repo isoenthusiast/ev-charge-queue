@@ -60,6 +60,10 @@ try {
     'DELETE FROM sessions WHERE user_id IN (SELECT id::text FROM users WHERE email = ANY($1::text[]))',
     [[env.TEST_EMAIL, env.TEST_OTHER_EMAIL]]
   )
+  await client.query(
+    'DELETE FROM locations WHERE created_by IN (SELECT id FROM users WHERE email = ANY($1::text[]))',
+    [[env.TEST_EMAIL, env.TEST_OTHER_EMAIL]]
+  )
   await client.query('DELETE FROM users WHERE email = ANY($1::text[])', [
     [env.TEST_EMAIL, env.TEST_OTHER_EMAIL],
   ])
