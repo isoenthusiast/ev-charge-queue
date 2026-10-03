@@ -22,4 +22,21 @@ Use `npm run starter:verify` with the documented isolated local `*_test` databas
 
 ## Limits
 
-No EV Railway deployment, hosted login/redeployment checks, real-device Safari/Android test, hardware integration or backup restoration is claimed. The inherited dependency advisory in SECURITY.md remains unresolved. Functional tests do not certify production security. GitHub's run also emitted action-runtime deprecation notices; the job completed successfully.
+Hosted authenticated login/booking/redeployment checks, real-device Safari/Android tests, hardware integration and backup restoration remain unverified. The first private user account has not yet been provisioned. The inherited dependency advisory in SECURITY.md remains unresolved. Functional tests do not certify production security. GitHub's run also emitted action-runtime deprecation notices; the job completed successfully.
+
+## Railway deployment — 4 October 2026 (Malaysia)
+
+- App: https://charge-queue-web-production.up.railway.app/login
+- Separate Railway project `ev-charge-queue`, production environment; source `isoenthusiast/ev-charge-queue@main`.
+- Deployment `2310119d-52a1-4e5a-8c55-4be7bfa8ceab` reached SUCCESS.
+- Docker build and startup passed. All five migrations applied successfully in the pre-deploy phase.
+- PostgreSQL 18 image has a persistent 5 GB volume; no database public domain or TCP proxy.
+- HTTPS smoke passed: /health/live, /health/ready and /login return 200; /notes and /app redirect unauthenticated requests to /login.
+- Fresh APP_KEY and database credentials were configured in Railway, not committed.
+- Owner explicitly approved DB_SSL=false for this private database connection at 06:04 MYT. Transport encryption is supplied by Railway's isolated WireGuard private network; PostgreSQL TLS is not enabled on the app connection. This approval does not apply to public database connections.
+- Existing dependency risk remains accepted with remediation deferred; see LESSONS_LEARNT.md.
+- These are deployed smoke checks, not authenticated acceptance or backup/restore verification.
+
+### First account
+
+From a secure terminal inside the running Railway web service, execute `node ace user:create` and enter the desired email and a password of 12–128 characters at the prompts. No default account or public registration exists. Do not place passwords in Git, logs or chat.
