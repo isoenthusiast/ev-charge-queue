@@ -43,6 +43,10 @@ The gate uses a disposable local `*_test` PostgreSQL database and the production
 
 Read `docs/ev-verification.md` for observed results and gaps. Generated browser session state and `.env` must never be committed. `docs/ev-requirements.md` records scope. The inherited `docs/template-verification.md` describes the original starter, not this app's test results.
 
+## Screenshots
+
+Actual automated-browser captures: [mobile](docs/previews/ev-queue-mobile.png) · [desktop](docs/previews/ev-queue-desktop.png). These use disposable synthetic data.
+
 ## Deployment
 
 Use `RAILWAY_SETUP.md` for Docker, migration, variable and health settings. Deploy this repository into a separate project/database with fresh secrets. No new hosted service has been provisioned for this app. Production readiness requires the checks and unresolved dependency advisory in `SECURITY.md`, plus your own hosted acceptance and backup/restore rehearsal.
