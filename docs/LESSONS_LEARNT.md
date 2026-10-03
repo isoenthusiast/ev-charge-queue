@@ -42,3 +42,17 @@ Suggested review points are a compatible upstream fix, new evidence that the vul
 ### Lesson for future projects
 
 A tested template reduces integration work but also propagates its dependencies and known risks. Carry an explicit problem, root cause, treatment plan and owner decision into each derived app. Keep functional verification separate from security closure.
+
+## LL-002: Explicit approval for private database transport
+
+**Date:** 4 October 2026 (Malaysia). **Status:** Approved configuration applied; deployment verified.
+
+**Problem:** Automatic approval review rejected DB_SSL=false as a potential reduction in database transport security. The first attempted deployment started before required variables were accepted and failed environment validation.
+
+**Root cause:** PostgreSQL TLS and Railway's encrypted private network are separate layers. The deployment configuration had not yet received explicit approval for relying on the private network. Connecting the source before confirming successful variable configuration also allowed an incomplete deployment to start.
+
+**Fix / way forward:** Edward explicitly approved DB_SSL=false solely for this private Railway connection at 06:04 MYT. PostgreSQL has no public endpoint; the app uses the private DATABASE_URL reference. Railway documents encrypted WireGuard traffic within the project environment. Web traffic remains HTTPS. Required variables were applied and the new deployment passed migrations, startup and HTTPS smoke checks. Provision variables and verify success before connecting a source in future deployments.
+
+This approval is specific to this deployment. If the database moves outside the private network or becomes publicly connected, reassess transport and configure certificate-verified PostgreSQL TLS. Do not copy this exception blindly.
+
+Reference: https://docs.railway.com/networking/private-networking/how-it-works
