@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    @include('partials/head')
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <p class="eyebrow">YOUR WORKSPACE</p>
+          <h1>A little more organised.</h1>
+          <p>Your private notes, all in one place.</p>
+        </div>
+        <form method="post" action="/logout">
+          {{ csrfField() }}<button class="secondary">Sign out</button>
+        </form>
+      </header>
+      <p class="muted">Signed in as {{ auth.user.email }}</p>
+      @include('partials/notes_panel')
+      <p id="network-error" role="alert" hidden>
+        That request did not finish. Check your connection and try again.
+      </p>
+    </main>
+  </body>
+</html>

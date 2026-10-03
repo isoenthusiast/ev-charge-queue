@@ -1,0 +1,26 @@
+{
+  "id": "ed-app-starter",
+  "version": "0.1.0",
+  "profile": "adonis-postgres-htmx",
+  "status": "public_copy_of_verified_runtime",
+  "node": "24.19.0",
+  "npm": "11.9.0",
+  "postgres": "18.4",
+  "repository_url": "https://github.com/isoenthusiast/ed-app-starter-public",
+  "railway_verified": false,
+  "android_included": false,
+  "verified_on": "2026-10-04",
+  "packages": {
+    "@adonisjs/core": "7.5.2",
+    "@adonisjs/lucid": "22.4.2",
+    "@adonisjs/auth": "10.1.0",
+    "@adonisjs/session": "8.1.0",
+    "@adonisjs/limiter": "3.0.1",
+    "htmx.org": "2.0.11",
+    "pg": "8.23.1",
+    "typescript": "6.0.3",
+    "@playwright/test": "1.56.1"
+  },
+  "railway_verification_scope": "Original runtime passed Docker/migrations/read-only smoke; public copy has no deployment binding and has not separately been deployed.",
+  "dependency_audit": "18 high findings tracing to braces <=3.0.3; requires review before production promotion"
+}

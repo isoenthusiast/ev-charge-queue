@@ -1,0 +1,56 @@
+<section id="notes-panel" aria-label="Your notes">
+  @if(error)
+    <p role="alert">{{ error }}</p>
+  @end
+
+  <form
+    method="post"
+    action="/notes"
+    hx-post="/notes"
+    hx-target="#notes-panel"
+    hx-swap="outerHTML"
+    hx-disabled-elt="find button"
+  >
+    {{ csrfField() }}
+    <label>
+      
+      
+      New note
+
+
+      <input name="title" placeholder="What would you like to remember?" maxlength="120" required />
+    </label>
+    <button type="submit">Add note</button><span class="htmx-indicator" role="status">Saving…</span>
+  </form>
+  <ul class="notes">
+    @each(note in notes)
+      <li data-note-id="{{ note.id }}">
+        <span class="note-title {{ note.done ? 'done' : '' }}">{{ note.title }}</span>
+        <div class="actions">
+          <form
+            method="post"
+            action="/notes/{{ note.id }}/toggle"
+            hx-post="/notes/{{ note.id }}/toggle"
+            hx-target="#notes-panel"
+            hx-swap="outerHTML"
+          >
+            {{ csrfField() }}<button class="secondary">
+              {{ note.done ? 'Reopen' : 'Complete' }}
+            </button>
+          </form>
+          <form
+            method="post"
+            action="/notes/{{ note.id }}/delete"
+            hx-post="/notes/{{ note.id }}/delete"
+            hx-target="#notes-panel"
+            hx-swap="outerHTML"
+          >
+            {{ csrfField() }}<button class="secondary">Delete</button>
+          </form>
+        </div>
+      </li>
+    @else
+      <li class="empty">No notes yet. Start with one thing on your mind.</li>
+    @end
+  </ul>
+</section>

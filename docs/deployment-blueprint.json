@@ -1,0 +1,72 @@
+{
+  "format": "ed-app-starter-deployment-blueprint",
+  "version": 1,
+  "purpose": "Agent-readable recipe; not executable Railway IaC",
+  "evidence": "Original runtime passed Railway Docker, migrations and read-only HTTPS smoke",
+  "inputs_required": [
+    "github_repository_owned_by_user",
+    "railway_workspace",
+    "app_name",
+    "authorized_budget",
+    "deployment_authorization"
+  ],
+  "services": {
+    "web": {
+      "source": "USER_GITHUB_REPOSITORY",
+      "branch": "main",
+      "builder": "Dockerfile",
+      "pre_deploy": [
+        "node ace migration:run --force"
+      ],
+      "start": "node bin/server.js",
+      "healthcheck": {
+        "path": "/health/ready",
+        "timeout_seconds": 120
+      },
+      "restart": {
+        "policy": "ON_FAILURE",
+        "max_retries": 3
+      },
+      "port": 3333,
+      "variables": {
+        "NODE_ENV": "production",
+        "HOST": "0.0.0.0",
+        "PORT": "3333",
+        "LOG_LEVEL": "info",
+        "SESSION_DRIVER": "database",
+        "DATABASE_URL": "${{Postgres.DATABASE_URL}}",
+        "APP_KEY": "GENERATE_FRESH_32_BYTES_BASE64_AND_STORE_SECURELY",
+        "APP_URL": "NEW_HTTPS_DOMAIN"
+      },
+      "DB_SSL": "Set according to actual database TLS; never disable certificate verification"
+    },
+    "Postgres": {
+      "image": "ghcr.io/railwayapp-templates/postgres-ssl:18",
+      "persistent_volume": {
+        "mount_path": "/var/lib/postgresql/data",
+        "size": "choose within user plan and budget"
+      },
+      "network": "private; no public TCP proxy required",
+      "credentials": "Generate separately for each deployment"
+    }
+  },
+  "acceptance": [
+    "fresh CI verification",
+    "Docker build succeeds",
+    "migrations finish",
+    "health/live and health/ready return 200",
+    "login page loads",
+    "anonymous protected route redirects",
+    "authenticated staging workflow",
+    "records and session survive redeploy",
+    "isolated backup restore rehearsal"
+  ],
+  "never_copy": [
+    "author secrets",
+    "author database or volume contents",
+    "author domain",
+    "author project/service/account IDs"
+  ],
+  "known_limit": "Unresolved braces advisory; see SECURITY.md",
+  "one_click_template_published": false
+}
