@@ -56,3 +56,44 @@ A tested template reduces integration work but also propagates its dependencies 
 This approval is specific to this deployment. If the database moves outside the private network or becomes publicly connected, reassess transport and configure certificate-verified PostgreSQL TLS. Do not copy this exception blindly.
 
 Reference: https://docs.railway.com/networking/private-networking/how-it-works
+
+## LL-003: A week of plumbing — standardize the foundation so the agent can develop the product
+
+**Date:** 4 October 2026 (Asia/Kuala_Lumpur). **Status:** Standard-stack direction adopted; repeatable setup remains an improvement to complete and verify.
+
+### Pain / problem
+
+Edward's assessment of the week-long development effort was that too much time went into plumbing before he could use the application. Attention repeatedly moved from product behavior to repository access, environment configuration, database connectivity, migrations, deployment settings, authentication and first-account provisioning.
+
+The final handoff also depended on approval prompts that did not complete on mobile, requiring another attempt on desktop. A running deployment was still not a usable handoff until the account existed and login worked.
+
+The cost was delayed product feedback, repeated troubleshooting, additional agent turns and owner intervention. Progress was difficult to judge because "built", "deployed" and "ready to use" represented different milestones. The week-long duration is the owner's retrospective assessment; no measured breakdown of time or token expenditure is available.
+
+### Root cause
+
+The central process failure was treating the application foundation as something to assemble and troubleshoot during product delivery, rather than a versioned, reusable capability with a proven setup path.
+
+- **Too many integration decisions remained open.** Framework, database, authentication, build and hosting conventions needed to work together. Individually valid components did not establish a working end-to-end system.
+- **Deployment configuration was not fully repeatable.** Repository configuration, platform settings and the configuration actually used by a deployment could differ. A successful setting change or local build did not prove the next deployed release used it.
+- **Operational access was discovered too late.** Connector capabilities, approval flows and the available account-provisioning mechanism affected whether the agent could finish the handoff, even when application code was ready.
+- **The definition of done stopped short of first use.** Health checks proved the service was running; they did not prove the owner could sign in and complete a useful workflow.
+
+These findings explain the integration and handoff friction observed here. They do not imply that every hour of the week had the same cause, or that a framework alone can remove hosting and access constraints.
+
+### Fix / way forward
+
+Adopt a small set of standard framework stacks, with one default for this class of application. Use the existing **TypeScript / AdonisJS / Lucid / PostgreSQL / Edge / HTMX** stack, with one application service and PostgreSQL on Railway. Preserve the documented stack unless a concrete product requirement justifies an exception.
+
+1. **Start from a verified, versioned template.** Pin a reviewed commit, runtime and dependency lockfile. Include supported authentication, validation, migrations, logging, health checks and reproducible build/test commands. Reuse the implementation, not just a list of preferred technologies.
+2. **Make deployment and first use part of the starter.** Document and verify required variables, platform settings, migration order, first-account creation and removal of setup credentials. Establish connector access and workable approval paths early.
+3. **Prove one small workflow before substantial feature work.** From a fresh project, build, deploy, sign in, save and retrieve a record, and verify persistence after restart. Report each stage separately and record anything blocked.
+4. **Give the agent a settled development contract.** Keep architecture, commands and troubleshooting guidance in the starter and AGENTS.md. Use framework features first; focus application work on domain rules, screens and acceptance tests. After two retries without new evidence, collect a targeted diagnostic instead of repeating speculative changes.
+5. **Feed reusable fixes back into the template.** Remove project identities and secrets, verify from a fresh clone, then publish a reviewed template revision. Carry known dependency risks and verification limits forward explicitly.
+
+### Success criterion and lesson
+
+A new application should reach a deployed, authenticated first workflow through the documented starter path without rediscovering the same plumbing. Record time to that milestone and the manual interventions required on the next project; use those observations to improve the template.
+
+**Standardize and verify the foundation once, maintain it deliberately, and let the agent spend its effort on the application's behavior.** This entry records the agreed direction, not a claim that all starter automation or hosted acceptance checks are already complete.
+
+Related guidance: [App Starter Pack](../APP_STARTER_PACK.md), [architecture](architecture.md) and [operations](operations.md).
